@@ -72,7 +72,6 @@ def store(data, outfile_name):
         print(data, file=of)
 
 
-
 if __name__ == '__main__':
     infile = sys.argv[1]
     filename_prep = re.search(r"(?<=data\/)(.*?)(?=\.wav)", infile).group(0)

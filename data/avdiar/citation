@@ -1,0 +1,8 @@
+@article{gebru2017a,
+TITLE={Audio-Visual Speaker Diarization Based on Spatiotemporal Bayesian Fusion},
+AUTHOR={Gebru, Israel D. and Ba, Sil{\`e}ye and Li, Xiaofei and Horaud, Radu},
+JOURNAL={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+VOLUME = {39},
+YEAR = {2017},
+DOI={10.1109/TPAMI.2017.2648793},
+}

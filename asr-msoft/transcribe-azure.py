@@ -3,6 +3,7 @@ import sys
 import re
 import io
 
+
 def transcribe_streaming(stream_file, result_file):
     """Streams transcription of the given audio file."""
     import time

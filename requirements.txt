@@ -1,0 +1,20 @@
+PyYAML
+numpy==1.18.3
+wheel
+monotonic
+pyobjc==6.2
+
+# google cloud API
+google-cloud-speech
+google-api-python-client
+gcloud
+pydub
+pyaudio
+sounddevice
+google-auth
+
+# IBM Waston
+ibm-watson
+
+# Microsoft
+

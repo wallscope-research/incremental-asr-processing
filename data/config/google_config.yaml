@@ -1,0 +1,10 @@
+config:
+  encoding: ""
+  sample_rate_hertz: 16000
+  language_code: "en-GB"
+  diarization_config:
+    enable_speaker_diarization: True
+    max_speaker_count: 1
+    min_speaker_count: 5
+interim_results: True
+
