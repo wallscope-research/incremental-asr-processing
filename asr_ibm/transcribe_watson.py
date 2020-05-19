@@ -19,6 +19,7 @@ speech_to_text = SpeechToTextV1(
 
 speech_to_text.set_service_url('your url')      ## Add your url
 
+
 class MyRecognizeCallback(RecognizeCallback):
     def __init__(self):
         RecognizeCallback.__init__(self)

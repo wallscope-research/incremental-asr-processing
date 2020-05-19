@@ -17,4 +17,4 @@ google-auth
 ibm-watson
 
 # Microsoft
-
+azure-storage-blob
