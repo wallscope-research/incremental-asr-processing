@@ -28,8 +28,8 @@ class IBMCloud:
             self.speech_to_text = SpeechToTextV1(authenticator=authenticator)
             self.speech_to_text.set_service_url(ibm_credentials.get('url'))
 
-        with open(os.path.join(data_path, 'config', 'watson_config.yaml')) as alana_yaml:
-            self._config = yaml.load(alana_yaml, Loader=yaml.FullLoader)
+        with open(os.path.join(data_path, 'watson_config.yaml')) as config_yaml:
+            self._config = yaml.load(config_yaml, Loader=yaml.FullLoader)
 
     def get_service(self):
         return self.speech_to_text
