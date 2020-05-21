@@ -121,9 +121,9 @@ class WatsonThread(threading.Thread):
         last_file = ""
         for sample_file, name in zip(self.sample_files, sample_names):
             if speaker_diar:
-                # speaker_diar_dict = self._process(os.path.splitext(name)[0], speaker_diar)
+                speaker_diar_dict = self._process(os.path.splitext(last_file)[0], speaker_diar)
                 write_to_file(self.predict_dir, os.path.splitext(last_file)[0], 'rttm',
-                              json.dumps(speaker_diar))
+                              '\n'.join(list(speaker_diar_dict.values())))
                 speaker_diar.clear()
             print('run the process with {}'.format(name))
             last_file = name
@@ -132,9 +132,10 @@ class WatsonThread(threading.Thread):
                                      IBMRecognizeCallback(self.predict_dir,
                                                           os.path.splitext(name)[0]))
         if speaker_diar:
-            # speaker_diar_dict = self._process(os.path.splitext(name)[0], speaker_diar)
+            speaker_diar_dict = self._process(os.path.splitext(last_file)[0], speaker_diar)
             write_to_file(self.predict_dir, os.path.splitext(last_file)[0], 'rttm',
-                          json.dumps(speaker_diar))
+                          '\n'.join(list(speaker_diar_dict.values())))
+            speaker_diar.clear()
 
     def _process(self, _filename: str, diar_results: list):
         speaker_diar_dict = {}
@@ -143,26 +144,19 @@ class WatsonThread(threading.Thread):
         for item in diar_results:
             print('item: {}'.format(item))
 
-            # if item.get('speaker', "NA") == "NA":
-            #     speaker_diar_dict[prev_time_stamp.get('from')] = json.dumps({'onset': prev_time_stamp.get('from'),
-            #                                                       'duration': prev_time_stamp.get('to') - prev_time_stamp.get('from'),
-            #                                                       'speaker_name': prev_speaker})
-            #
-            #     prev_time_stamp = {}
-            #     prev_speaker = ""
-            #     continue
-
             if prev_speaker == item.get('speaker') + 1:
                 print('prev_speaker: {}'.format(prev_speaker))
                 prev_time_stamp['to'] = item.get('to')
             else:
                 if prev_speaker and prev_time_stamp:
                     speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
-                                                                                          onset=prev_time_stamp.get(
-                                                                                              'from'),
-                                                                                          duration=prev_time_stamp.get(
-                                                                                              'to') - prev_time_stamp.get(
-                                                                                              'from'),
+                                                                                          onset="{:.3f}".format(
+                                                                                              prev_time_stamp.get(
+                                                                                                  'from')),
+                                                                                          duration="{:.3f}".format(
+                                                                                              prev_time_stamp.get('to')
+                                                                                              - prev_time_stamp
+                                                                                              .get('from')),
                                                                                           speaker_name='PER-{}'.format(
                                                                                               prev_speaker))
                     print('add speaker into the dict: {}'.format(speaker_diar_dict))
@@ -172,10 +166,12 @@ class WatsonThread(threading.Thread):
 
         if prev_speaker and prev_time_stamp:
             speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
-                                                                                  onset=prev_time_stamp.get('from'),
-                                                                                  duration=prev_time_stamp.get(
-                                                                                      'to') - prev_time_stamp.get(
-                                                                                      'from'),
+                                                                                  onset="{:.3f}".format(prev_time_stamp
+                                                                                                        .get('from')),
+                                                                                  duration="{:.3f}".format(
+                                                                                      prev_time_stamp.get(
+                                                                                          'to') - prev_time_stamp.get(
+                                                                                          'from')),
                                                                                   speaker_name='PER-{}'.format(
                                                                                       prev_speaker))
 
@@ -250,12 +246,6 @@ class DeepAffectsThread(threading.Thread):
                             print(u"Word: {}".format(word))
                             write_to_file(self.predict_dir, os.path.splitext(name)[0], 'txt', word)
 
-            # response_line = template_line.format(filename=os.path.splitext(name)[0],
-            #                                      onset="<NA>",
-            #                                      duration="<NA>",
-            #                                      speaker_name="PER-{}".format('1'))
-            # write_to_file(self.predict_dir, os.path.splitext(name)[0], 'rttm', response_line)
-
     def process(self, response: dict):
         pass
 
@@ -296,43 +286,42 @@ def write_to_file(predict_dir: str, filename: str, extension: str, textline: str
         myfile.write(textline + "\n")
 
 
-def process(diar_results: list):
+def process(_filename: str, diar_results: list):
     speaker_diar_dict = {}
     prev_time_stamp = {}
     prev_speaker = ""
     for item in diar_results:
         print('item: {}'.format(item))
 
-        # if item.get('speaker', "NA") == "NA":
-        #     speaker_diar_dict[prev_time_stamp.get('from')] = json.dumps({'onset': prev_time_stamp.get('from'),
-        #                                                       'duration': prev_time_stamp.get('to') - prev_time_stamp.get('from'),
-        #                                                       'speaker_name': prev_speaker})
-        #
-        #     prev_time_stamp = {}
-        #     prev_speaker = ""
-        #     continue
-
         if prev_speaker == item.get('speaker') + 1:
             print('prev_speaker: {}'.format(prev_speaker))
             prev_time_stamp['to'] = item.get('to')
         else:
             if prev_speaker and prev_time_stamp:
-                speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=filename,
-                                                                                      onset=prev_time_stamp.get('from'),
-                                                                                      duration=prev_time_stamp.get(
-                                                                                          'to') - prev_time_stamp.get('from'),
-                                                                                      speaker_name='PER-{}'.format(prev_speaker))
+                speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
+                                                                                      onset="{:.3f}".format(
+                                                                                          prev_time_stamp.get('from')),
+                                                                                      duration="{:.3f}".format(
+                                                                                          prev_time_stamp.get('to')
+                                                                                          - prev_time_stamp
+                                                                                          .get('from')),
+                                                                                      speaker_name='PER-{}'.format(
+                                                                                          prev_speaker))
                 print('add speaker into the dict: {}'.format(speaker_diar_dict))
 
             prev_time_stamp = {'from': item.get('from'), 'to': item.get('to')}
             prev_speaker = item.get('speaker') + 1
 
     if prev_speaker and prev_time_stamp:
-        speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=filename,
-                                                                              onset=prev_time_stamp.get('from'),
-                                                                              duration= prev_time_stamp.get(
-                                                                                  'to') - prev_time_stamp.get('from'),
-                                                                              speaker_name='PER-{}'.format(prev_speaker))
+        speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
+                                                                              onset="{:.3f}".format(prev_time_stamp
+                                                                                                    .get('from')),
+                                                                              duration="{:.3f}".format(
+                                                                                  prev_time_stamp.get(
+                                                                                      'to') - prev_time_stamp.get(
+                                                                                      'from')),
+                                                                              speaker_name='PER-{}'.format(
+                                                                                  prev_speaker))
 
         print('add speaker into the dict: {}'.format(speaker_diar_dict))
 
@@ -340,15 +329,15 @@ def process(diar_results: list):
 
 
 if __name__ == '__main__':
-    # evaluator = Eval('swb')
+    evaluator = Eval('avdiar')
+    evaluator.eval(IBM_WATSON)
     # evaluator.eval(GOOGLE_CLOUD)
-    # evaluator.eval(IBM_WATSON)
 
-    filename = 'Seq06-2P-S1M0'
-    with open(os.path.join(os.getcwd().replace('/eval', '/data'), 'swb', 'predicts', 'ibm', '{}.json'.format(filename))) as file:
-        speaker_diar = json.load(file)
-        speaker_diar_dict = process(speaker_diar.get('results'))
-        write_to_file(os.path.join(os.getcwd().replace('/eval', '/data'), 'swb', 'predicts', 'ibm'),
-                      '{}-UPDATED'.format(filename),
-                      'rttm',
-                      '\n'.join(list(speaker_diar_dict.values())))
+    # filename = 'Seq06-2P-S1M0'
+    # with open(os.path.join(os.getcwd().replace('/eval', '/data'), 'swb', 'predicts', 'ibm', '{}.json'.format(filename))) as file:
+    #     speaker_diar = json.load(file)
+    #     speaker_diar_dict = process(filename, speaker_diar.get('results'))
+    #     write_to_file(os.path.join(os.getcwd().replace('/eval', '/data'), 'swb', 'predicts', 'ibm'),
+    #                   '{}-UPDATED'.format(filename),
+    #                   'rttm',
+    #                   '\n'.join(list(speaker_diar_dict.values())))

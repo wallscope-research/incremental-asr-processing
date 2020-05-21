@@ -3,6 +3,7 @@ numpy==1.18.3
 wheel
 monotonic
 pyobjc==6.2
+webhooks
 
 # google cloud API
 google-cloud-speech
@@ -18,3 +19,6 @@ ibm-watson
 
 # Microsoft
 azure-storage-blob
+
+# DeepAffects
+deepaffects

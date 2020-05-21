@@ -1,10 +1,12 @@
 config:
   encoding: ""
+  model: "phone_call"
+  enable_word_time_offsets: True
+  use_enhanced: False
   sample_rate_hertz: 16000
-  language_code: "en-GB"
+  language_code: "en-US"
   diarization_config:
     enable_speaker_diarization: True
     max_speaker_count: 1
     min_speaker_count: 5
-interim_results: True
-
+  interim_results: True
