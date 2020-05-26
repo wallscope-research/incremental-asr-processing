@@ -9,4 +9,7 @@ config:
     enable_speaker_diarization: True
     max_speaker_count: 1
     min_speaker_count: 5
-  interim_results: True
+interim_results: True
+
+
+

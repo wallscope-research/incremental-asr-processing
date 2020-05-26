@@ -19,6 +19,9 @@ ibm-watson
 
 # Microsoft
 azure-storage-blob
+azure-mgmt-resource
+azure-cli-core
+azure-cognitiveservices-speech
 
 # DeepAffects
 deepaffects

@@ -9,9 +9,10 @@ echo $SCRIPTPATH
 PROJECTROOTPATH="$(dirname "$SCRIPTPATH")"
 echo $PROJECTROOTPATH
 
-virtualenv -p python3 venv
+#virtualenv -p python3 venv
+brew install ffmpeg
 
-source ${SCRIPTPATH}/venv/bin/activate
-#${SCRIPTPATH}/venv/bin/pip3 list
-${SCRIPTPATH}/venv/bin/python -m pip install --upgrade pip
-${SCRIPTPATH}/venv/bin/pip3 install -r requirements.txt
+#source ${SCRIPTPATH}/venv/bin/activate
+##${SCRIPTPATH}/venv/bin/pip3 list
+#${SCRIPTPATH}/venv/bin/python -m pip install --upgrade pip
+#${SCRIPTPATH}/venv/bin/pip3 install -r requirements.txt

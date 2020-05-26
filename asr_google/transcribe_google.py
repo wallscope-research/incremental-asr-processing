@@ -1,18 +1,26 @@
 #!/usr/bin/env python
-
+import os
 import sys
 import re
 
 
 # [START speech_transcribe_streaming]
-def transcribe_streaming(stream_file, result_file):
+from google.oauth2 import service_account
+
+
+def transcribe_streaming(stream_file):
     """Streams transcription of the given audio file."""
     import io
     import wave
     from google.cloud import speech
     from google.cloud.speech import enums
     from google.cloud.speech import types
-    client = speech.SpeechClient()
+
+    data_path = os.path.join(os.getcwd().replace('/eval', '/data').replace('/asr_google', '/data'), 'config')
+    _google_cloud_speech_credentials = os.path.join(data_path, 'google_credentials.json')
+    credentials = service_account.Credentials.from_service_account_file(_google_cloud_speech_credentials)
+
+    client = speech.SpeechClient(credentials=credentials)
 
     # [START speech_python_migration_streaming_request]
     with io.open(stream_file, 'rb') as audio_file:
@@ -30,7 +38,7 @@ def transcribe_streaming(stream_file, result_file):
     language_code = "en-US"
 
     wf = wave.open(stream_file, mode="rb")
-    
+
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=wf.getframerate(),
@@ -55,15 +63,19 @@ def transcribe_streaming(stream_file, result_file):
         # Once the transcription has settled, the first result will contain the
         # is_final result. The other results will be for subsequent portions of
         # the audio.
-        result = response.results[0]
-        store('Finished: {}'.format(result.is_final), result_file)
-        store('Stability: {}'.format(result.stability), result_file)
-        store('Time: {}'.format(result.result_end_time.seconds + result.result_end_time.nanos*1e-9), result_file)
-        alternative = result.alternatives[0]
-        # The alternatives are ordered from most likely to least.
-        # for alternative in alternatives:
-        store(u'Transcript: {}'.format(alternative.transcript), result_file)
+        print(u"response: {}".format(response))
+        # result = response.results[0]
+        # print(u"result: {}".format(result))
+        # store('Finished: {}'.format(result.is_final), result_file)
+        # store('Stability: {}'.format(result.stability), result_file)
+        # store('Time: {}'.format(result.result_end_time.seconds + result.result_end_time.nanos * 1e-9), result_file)
+        # alternative = result.alternatives[0]
+        # # The alternatives are ordered from most likely to least.
+        # # for alternative in alternatives:
+        # store(u'Transcript: {}'.format(alternative.transcript), result_file)
     # [END speech_python_migration_streaming_response]
+
+
 # [END speech_transcribe_streaming]
 
 
@@ -73,11 +85,13 @@ def store(data, outfile_name):
 
 
 if __name__ == '__main__':
-    infile = sys.argv[1]
-    filename_prep = re.search(r"(?<=data\/)(.*?)(?=\.wav)", infile).group(0)
-    outfile = "./results/" + filename_prep + ".txt"
-    
-    with open(outfile, 'w') as of:
-        print(filename_prep, file=of)
+    infile = '/Users/yy165/Yanchao_Yu/Job/HW/SPRING/Code/incremental-asr-evaluation/data/avdiar/audios/sw04707-mono.wav'
 
-    transcribe_streaming(infile, outfile)
+    # sys.argv[1]
+    # filename_prep = re.search(r"(?<=data\/)(.*?)(?=\.wav)", infile).group(0)
+    # outfile = "./results/" + filename_prep + ".txt"
+    #
+    # with open(outfile, 'w') as of:
+    #     print(filename_prep, file=of)
+
+    transcribe_streaming(infile)
