@@ -10,7 +10,8 @@ PROJECTROOTPATH="$(dirname "$SCRIPTPATH")"
 echo $PROJECTROOTPATH
 
 #virtualenv -p python3 venv
-brew install ffmpeg
+#brew install ffmpeg
+#brew install sox
 
 #source ${SCRIPTPATH}/venv/bin/activate
 ##${SCRIPTPATH}/venv/bin/pip3 list

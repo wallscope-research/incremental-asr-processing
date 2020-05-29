@@ -4,6 +4,8 @@ wheel
 monotonic
 pyobjc==6.2
 webhooks
+sox
+flask
 
 # google cloud API
 google-cloud-speech
@@ -16,12 +18,6 @@ google-auth
 
 # IBM Waston
 ibm-watson
-
-# Microsoft
-azure-storage-blob
-azure-mgmt-resource
-azure-cli-core
-azure-cognitiveservices-speech
 
 # DeepAffects
 deepaffects

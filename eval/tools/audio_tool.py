@@ -1,6 +1,7 @@
 import glob
 import os
 
+import sox
 from pydub import AudioSegment
 
 
@@ -27,9 +28,26 @@ class AudioTool(object):
             _path = os.path.join(_path_dir, name)
             song.export(_path, "wav")
 
+    def combine_channels(self):
+        # create a transformer
+        tfm = sox.Transformer()
+
+        sample_names = [os.path.basename(x) for x in self.audio_samples]
+        for sample_file, _name in zip(self.audio_samples, sample_names):
+            mono_name = _name.replace('.wav', '-mono.wav')
+            tfm.remix(remix_dictionary=None, num_output_channels=1)
+
+            # save the output
+            _path_dir = os.path.join(self._dataset_path, 'audios')
+            if not os.path.exists(_path_dir):
+                os.makedirs(_path_dir)
+
+            output_file = os.path.join(_path_dir, mono_name)
+            tfm.build(sample_file, output_file)
+
 
 if __name__ == '__main__':
-    tool = AudioTool('avdiar')
-    tool.run()
+    tool = AudioTool('SWB')
+    tool.combine_channels()
 
 

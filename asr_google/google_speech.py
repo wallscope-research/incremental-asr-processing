@@ -67,6 +67,75 @@ class GoogleCloud:
         return responses
 
 
+template_line = "SPEAKER {filename} 1 {onset} {duration} <NA> <NA> {speaker_name} <NA>"
+
+
+def _process(_filename: str, words, last_end_time: float):
+    speaker_diar_dict = {}
+    prev_time_stamp = {}
+    prev_speaker = ""
+    final_end_timestamp = 0
+
+    for word_info in words:
+        start_time = word_info.start_time.seconds + word_info.start_time.nanos * 1e-9 if word_info.start_time else 0
+        end_time = word_info.end_time.seconds + word_info.end_time.nanos * 1e-9
+        final_end_timestamp = end_time
+
+        if start_time < last_end_time:
+            continue
+
+        if prev_speaker == word_info.speaker_tag:
+            # print('prev_speaker: {}'.format(prev_speaker))
+            prev_time_stamp['to'] = end_time
+        else:
+            if prev_speaker and prev_time_stamp:
+                speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
+                                                                                      onset="{:.3f}".format(
+                                                                                          prev_time_stamp.get(
+                                                                                              'from')),
+                                                                                      duration="{:.3f}".format(
+                                                                                          prev_time_stamp.get('to')
+                                                                                          - prev_time_stamp
+                                                                                          .get('from')),
+                                                                                      speaker_name='PER-{}'.format(
+                                                                                          prev_speaker))
+                print('add speaker into the dict: {}'.format(speaker_diar_dict))
+
+            prev_time_stamp = {'from': start_time, 'to': end_time}
+            prev_speaker = word_info.speaker_tag
+
+    if prev_speaker and prev_time_stamp:
+        speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
+                                                                              onset="{:.3f}".format(prev_time_stamp
+                                                                                                    .get('from')),
+                                                                              duration="{:.3f}".format(
+                                                                                  prev_time_stamp.get(
+                                                                                      'to') - prev_time_stamp.get(
+                                                                                      'from')),
+                                                                              speaker_name='PER-{}'.format(
+                                                                                  prev_speaker))
+
+        print('add speaker into the dict: {}'.format(speaker_diar_dict))
+
+    return dict(sorted(speaker_diar_dict.items())), final_end_timestamp
+
+
 if __name__ == '__main__':
     google_recogniser = GoogleCloud()
-    google_recogniser.transcribe_streaming('/Users/yy165/Yanchao_Yu/Job/HW/SPRING/Code/incremental-asr-evaluation/data/avdiar/audios/Seq01-1P-S0M1.wav')
+    _responses = google_recogniser.transcribe_streaming('/Users/yy165/Yanchao_Yu/Job/HW/SPRING/Code/incremental-asr-evaluation/data/SWB/audios/sw02657-mono.wav')
+
+    end_timestamp = 0
+    for res in _responses:
+        if not res.results:
+            continue
+        for result in res.results:
+            if result.is_final:
+                # First alternative has words tagged with speakers
+                alternative = result.alternatives[0]
+
+                words = alternative.words
+                print('------------- words: {} ------------- '.format(words))
+
+                results, end_timestamp = _process('sw02657-mono', alternative.words, end_timestamp)
+                print('results: {}'.format(results))
+

@@ -57,8 +57,29 @@ class GoogleThread(threading.Thread):
         print('predict directory: {}'.format(self.predict_dir))
         if not os.path.exists(self.predict_dir):
             os.makedirs(self.predict_dir)
+        print('is predict file existing? {}'.format(not os.path.exists(self.predict_dir)))
 
-        self.sample_files = sample_files
+        self.completed_predict_dir = os.path.join(predict_dir, 'predicts', 'ibm')
+        if os.path.exists(self.completed_predict_dir):
+            print('sample_files: {}'.format(sample_files))
+            print('BEFORE reduction: {}'.format(len(sample_files)))
+            processed_files = [os.path.splitext(os.path.basename(x))[0] for x in
+                               glob.glob(os.path.join(self.completed_predict_dir, '*-mono.rttm'))]
+            print('processed_files: {}'.format(processed_files))
+            self.sample_files = [x for x in sample_files if
+                                 os.path.splitext(os.path.basename(x))[0] in processed_files]
+
+
+            old_processed_files = [os.path.splitext(os.path.basename(x))[0] for x in
+                                   glob.glob(os.path.join(self.predict_dir, '*-mono.rttm'))]
+            self.sample_files = [x for x in sample_files if
+                                 os.path.splitext(os.path.basename(x))[0] not in old_processed_files and
+                                 os.path.splitext(os.path.basename(x))[0] in processed_files]
+
+            print('AFTER reduction: {}'.format(len(self.sample_files)))
+            print('self.sample_files: {}'.format(self.sample_files))
+        else:
+            self.sample_files = sample_files
 
         self._google_service = GoogleCloud()
 
@@ -66,14 +87,13 @@ class GoogleThread(threading.Thread):
         print('starting thread {ID}'.format(ID=self.thread_id))
 
         sample_names = [os.path.basename(x) for x in self.sample_files]
-        for sample_file, name in zip(self.sample_files, sample_names):
-            global speaker_diar
-            speaker_diar.clear()
-            print('run the process with {}'.format(name))
+        for index, sample_file, name in zip(range(1, len(sample_names)), self.sample_files, sample_names):
+            print('run the process with the {}-th file: {}'.format(index, name))
 
             try:
                 _responses = self._google_service.transcribe_streaming(sample_file)
-
+                end_timestamp = 0
+                speaker_diar_results = {}
                 for res in _responses:
                     if not res.results:
                         continue
@@ -82,18 +102,68 @@ class GoogleThread(threading.Thread):
                             # First alternative has words tagged with speakers
                             alternative = result.alternatives[0]
 
-                            for word in alternative.words:
-                                print(u"Word: {}".format(word))
-                                write_to_file(self.predict_dir, os.path.splitext(name)[0], 'txt',
-                                          template_line.format(filename=os.path.splitext(name)[0],
-                                                               onset="{:.3f}".format(word.getStartTime()),
-                                                               duration="{:.3f}".format(word.getEndTime()),
-                                                               speaker_name='PER-{}'.format(word.getSpeakerTag())))
+                            results, end_timestamp = self._process(os.path.splitext(name)[0],
+                                                                   alternative.words,
+                                                                   end_timestamp)
+                            # print('speaker_diar_results: {}'.format(speaker_diar_results))
+                            # print('results: {}'.format(results))
+                            speaker_diar_results = {**speaker_diar_results, **results}
+
+                sorted_speaker_results = dict(sorted(speaker_diar_results.items()))
+                write_to_file(self.predict_dir, os.path.splitext(name)[0], 'rttm',
+                              '\n'.join(list(sorted_speaker_results.values())))
+
             except OutOfRange as e:
                 print('Error: {}'.format(e.message))
 
-    def process(self, response: dict):
-        pass
+    def _process(self, _filename: str, words, last_end_time: float):
+        speaker_diar_dict = {}
+        prev_time_stamp = {}
+        prev_speaker = ""
+        final_end_timestamp = 0
+
+        for word_info in words:
+            start_time = word_info.start_time.seconds + word_info.start_time.nanos * 1e-9 if word_info.start_time else 0
+            end_time = word_info.end_time.seconds + word_info.end_time.nanos * 1e-9
+            final_end_timestamp = end_time
+
+            if start_time < last_end_time:
+                continue
+
+            if prev_speaker == word_info.speaker_tag:
+                # print('prev_speaker: {}'.format(prev_speaker))
+                prev_time_stamp['to'] = end_time
+            else:
+                if prev_speaker and prev_time_stamp:
+                    speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
+                                                                                          onset="{:.3f}".format(
+                                                                                              prev_time_stamp.get(
+                                                                                                  'from')),
+                                                                                          duration="{:.3f}".format(
+                                                                                              prev_time_stamp.get('to')
+                                                                                              - prev_time_stamp
+                                                                                              .get('from')),
+                                                                                          speaker_name='PER-{}'.format(
+                                                                                              prev_speaker))
+                    # print('add speaker into the dict: {}'.format(speaker_diar_dict))
+
+                prev_time_stamp = {'from': start_time, 'to': end_time}
+                prev_speaker = word_info.speaker_tag
+
+        if prev_speaker and prev_time_stamp:
+            speaker_diar_dict[prev_time_stamp.get('from')] = template_line.format(filename=_filename,
+                                                                                  onset="{:.3f}".format(prev_time_stamp
+                                                                                                        .get('from')),
+                                                                                  duration="{:.3f}".format(
+                                                                                      prev_time_stamp.get(
+                                                                                          'to') - prev_time_stamp.get(
+                                                                                          'from')),
+                                                                                  speaker_name='PER-{}'.format(
+                                                                                      prev_speaker))
+
+            # print('add speaker into the dict: {}'.format(speaker_diar_dict))
+
+        return dict(sorted(speaker_diar_dict.items())), final_end_timestamp
 
 
 class WatsonThread(threading.Thread):
@@ -101,13 +171,22 @@ class WatsonThread(threading.Thread):
     def __init__(self, thread_id: int, predict_dir: str, sample_files: list):
         super().__init__()
         self.thread_id = thread_id
-
         self.predict_dir = os.path.join(predict_dir, 'predicts', 'ibm')
         print('predict directory: {}'.format(self.predict_dir))
-        if not os.path.exists(self.predict_dir):
+
+        if os.path.exists(self.predict_dir):
+            print('sample_files: {}'.format(sample_files))
+            print('BEFORE reduction: {}'.format(len(sample_files)))
+            processed_files = [os.path.splitext(os.path.basename(x))[0] for x in glob.glob(os.path.join(self.predict_dir, '*-mono.rttm'))]
+            print('processed_files: {}'.format(processed_files))
+            processed_files.append('sw02729-mono')
+            processed_files.append('sw04619-mono')
+            self.sample_files = [x for x in sample_files if os.path.splitext(os.path.basename(x))[0] not in processed_files]
+            print('AFTER reduction: {}'.format(len(self.sample_files)))
+        else:
+            self.sample_files = sample_files
             os.makedirs(self.predict_dir)
 
-        self.sample_files = sample_files
         self._ibm_service = IBMCloud()
 
     def run(self) -> None:
@@ -116,13 +195,13 @@ class WatsonThread(threading.Thread):
         global speaker_diar
         sample_names = [os.path.basename(x) for x in self.sample_files]
         last_file = ""
-        for sample_file, name in zip(self.sample_files, sample_names):
+        for index, sample_file, name in zip(range(1, len(sample_names)), self.sample_files, sample_names):
             if speaker_diar and last_file:
                 speaker_diar_dict = self._process(os.path.splitext(last_file)[0], speaker_diar)
                 write_to_file(self.predict_dir, os.path.splitext(last_file)[0], 'rttm',
                               '\n'.join(list(speaker_diar_dict.values())))
                 speaker_diar.clear()
-            print('run the process with {}'.format(name))
+            print('run the process with the {}-th file: {}'.format(index, name))
             last_file = name
 
             self._ibm_service.listen(sample_file,
@@ -196,10 +275,10 @@ class DeepAffectsThread(threading.Thread):
         print('starting thread {ID}'.format(ID=self.thread_id))
 
         sample_names = [os.path.basename(x) for x in self.sample_files]
-        for sample_file, name in zip(self.sample_files, sample_names):
+        for index, sample_file, name in zip(range(1, len(sample_names)), self.sample_files, sample_names):
             global speaker_diar
             speaker_diar.clear()
-            print('run the process with {}'.format(name))
+            print('run the process with the {}-th file: {}'.format(index, name))
 
             responses = self._deep_service.listen(sample_file)
             for response in responses:
