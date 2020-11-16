@@ -13,7 +13,7 @@ Addlesee, A., Yu, Y. and Eshghi, A., 2020. A Comprehensive Evaluation of Increme
 
 BibTeX:
 ```
-@inproceedings{addlesee2020ethically,
+@inproceedings{addlesee2020evaluation,
   title={A Comprehensive Evaluation of Incremental Speech Recognition and Diarization for Conversational AI},
   author={Addlesee, Angus and Yu, Yanchao and Eshghi, Arash},
   journal={COLING 2020},
