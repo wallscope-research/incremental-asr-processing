@@ -7,8 +7,10 @@ def transcribe_streaming(stream_file, result_file):
     """Streams transcription of the given audio file."""
     import time
     
+    # Microsoft authentication - add your API key on the line below. Using 'uksouth' as I am in the UK.
     speech_key, service_region = "your key", "uksouth"      ## Add your key 
     speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+    # Return word timings!
     speech_config.request_word_level_timestamps()
 
     audio_input = speechsdk.AudioConfig(filename=stream_file)
@@ -35,6 +37,7 @@ def transcribe_streaming(stream_file, result_file):
     # Start continuous speech recognition
     speech_recognizer.start_continuous_recognition()
     while not done:
+        # Request current hypothesis every 0.05s
         time.sleep(.05)
 
     speech_recognizer.stop_continuous_recognition()
@@ -46,8 +49,10 @@ def store(data, outfile_name):
 
 
 if __name__ == '__main__':
+    # Python script takes a path to a .wav audio file.
     infile = sys.argv[1]
     print("NOTICE I:   " + infile)
+    # The results are stored in 'outfile' - which is named based on the 'infile'.
     filename_prep = re.search(r"(?<=data\/)(.*?)(?=\.wav)", infile).group(0)
     outfile = "/results/" + filename_prep + ".txt"
     
