@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-
 import sys
 import re
 
-
-# [START speech_transcribe_streaming]
+# Streams transcription of the given audio file.
 def transcribe_streaming(stream_file, result_file):
-    """Streams transcription of the given audio file."""
     import io
     import wave
     from google.cloud import speech
@@ -14,7 +11,6 @@ def transcribe_streaming(stream_file, result_file):
     from google.cloud.speech import types
     client = speech.SpeechClient()
 
-    # [START speech_python_migration_streaming_request]
     with io.open(stream_file, 'rb') as audio_file:
         content = audio_file.read()
 
@@ -23,14 +19,19 @@ def transcribe_streaming(stream_file, result_file):
     requests = (types.StreamingRecognizeRequest(audio_content=chunk)
                 for chunk in stream)
 
+    # Using Google's "phone_call" model as Switchboard consists of dyadic phone calls.
     model = "phone_call"
     use_enhanced = False
+    # Return word timings!
     enable_word_time_offsets = True
+    # Return results incrementally!
     interim = True
+    # Using "en-US" for Switchboard.
     language_code = "en-US"
 
     wf = wave.open(stream_file, mode="rb")
     
+    # Setup config for audio files. Often using wf here to get the audio file's properties.
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=wf.getframerate(),
@@ -41,15 +42,14 @@ def transcribe_streaming(stream_file, result_file):
         audio_channel_count=wf.getnchannels()
     )
 
+    # Setting up streaming config - activating incrementality here.
     streaming_config = types.StreamingRecognitionConfig(
         config=config,
         interim_results=interim
     )
 
     # streaming_recognize returns a generator.
-    # [START speech_python_migration_streaming_response]
     responses = client.streaming_recognize(streaming_config, requests)
-    # [END speech_python_migration_streaming_request]
 
     for response in responses:
         # Once the transcription has settled, the first result will contain the
@@ -59,12 +59,10 @@ def transcribe_streaming(stream_file, result_file):
         store('Finished: {}'.format(result.is_final), result_file)
         store('Stability: {}'.format(result.stability), result_file)
         store('Time: {}'.format(result.result_end_time.seconds + result.result_end_time.nanos*1e-9), result_file)
-        alternative = result.alternatives[0]
         # The alternatives are ordered from most likely to least.
-        # for alternative in alternatives:
+        alternative = result.alternatives[0]
+        # Storing results for later processing.
         store(u'Transcript: {}'.format(alternative.transcript), result_file)
-    # [END speech_python_migration_streaming_response]
-# [END speech_transcribe_streaming]
 
 
 def store(data, outfile_name):
@@ -72,9 +70,10 @@ def store(data, outfile_name):
         print(data, file=of)
 
 
-
 if __name__ == '__main__':
+    # Python script takes a path to a .wav audio file.
     infile = sys.argv[1]
+    # The results are stored in 'outfile' - which is named based on the 'infile'.
     filename_prep = re.search(r"(?<=data\/)(.*?)(?=\.wav)", infile).group(0)
     outfile = "./results/" + filename_prep + ".txt"
     
