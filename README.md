@@ -1,6 +1,6 @@
-# Incremental Speech Processing
+# Incremental ASR Processing
 
-This repository allows you to process speech audio, transcribing it incrementally. This was originally created for a [paper published at COLING 2020](https://www.aclweb.org/anthology/2020.coling-main.312.pdf).
+This repository allows you to process speech audio, transcribing it incrementally. This was originally created for a [paper published at COLING 2020](https://www.aclweb.org/anthology/2020.coling-main.312.pdf). You can evaluate incremental ASR systems (using the transcriptions generated in this repository) with our [Incremental ASR Evaluation repository](https://github.com/wallscope-research/incremental-asr-evaluation).
 
 This paper (by [Angus Addlesee](http://addlesee.co.uk/), [Yanchao Yu](https://www.researchgate.net/profile/Yanchao_Yu), and [Arash Eshghi](https://sites.google.com/site/araesh81/)) can be found [here](https://www.aclweb.org/anthology/2020.coling-main.312.pdf) and is titled: "A Comprehensive Evaluation of Incremental Speech Recognition and Diarization for Conversational AI".
 
