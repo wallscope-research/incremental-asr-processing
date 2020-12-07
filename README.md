@@ -1,8 +1,8 @@
 # Incremental Speech Processing
 
-This repository allows you to process speech audio, transcribing it incrementally. This was originally created for a paper published at COLING 2020.
+This repository allows you to process speech audio, transcribing it incrementally. This was originally created for a [paper published at COLING 2020](https://www.aclweb.org/anthology/2020.coling-main.312.pdf).
 
-This paper (by [Angus Addlesee](http://addlesee.co.uk/), [Yanchao Yu](https://www.researchgate.net/profile/Yanchao_Yu), and [Arash Eshghi](https://sites.google.com/site/araesh81/)) can be found here and is titled: "A Comprehensive Evaluation of Incremental Speech Recognition and Diarization for Conversational AI".
+This paper (by [Angus Addlesee](http://addlesee.co.uk/), [Yanchao Yu](https://www.researchgate.net/profile/Yanchao_Yu), and [Arash Eshghi](https://sites.google.com/site/araesh81/)) can be found [here](https://www.aclweb.org/anthology/2020.coling-main.312.pdf) and is titled: "A Comprehensive Evaluation of Incremental Speech Recognition and Diarization for Conversational AI".
 
 If you use this repository in your work - please cite us:
 
