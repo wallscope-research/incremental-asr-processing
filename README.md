@@ -48,6 +48,6 @@ You should store the audio files that you would like to be transcribed in the `d
 
 We use the [Switchboard Corpus](https://catalog.ldc.upenn.edu/LDC97S62) to evaluate incremental ASR systems - if you would like to recreate the experiments in our COLING 2020 paper, you can find the information in the `switchboard` directory. Within you will find our script to 'clean' disfluencies in the gold transcriptions, and find the script to format Switchboard with its timings into the several required formats.
 
-## Acknowlegements
+## Acknowledgements
 
 [Angus Addlesee](http://addlesee.co.uk/) is funded by [Wallscope](https://wallscope.co.uk/) and [The Data Lab](https://www.thedatalab.com/). [Yanchao Yu](https://www.researchgate.net/profile/Yanchao_Yu) is funded by the Horizon2020 [SPRING Project](https://spring-h2020.eu/). We thank them for their support.
